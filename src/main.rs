@@ -42,7 +42,7 @@ fn run() -> Result<(), Box<dyn Error>> {
             if rotaries.contains_key(&control) {
                 let old = *rotaries.get(&control).unwrap() as isize;
                 new = match message[2] {
-                    63 => old + (-1 * steps as isize),
+                    63 => old - (steps as isize),
                     65 => old + (steps as isize),
                     x => x as isize,
                 };
