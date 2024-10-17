@@ -35,7 +35,8 @@ If you prefer not to build the project from source, you can download pre-compile
 1. Run the system-appropriate executable:
    - On Windows: `Windows.cmddc1rtf.exe` (Ensure **LoopBe1** is installed)
    - On Linux: `./Linux.cmddc1rtf`
-2. Select the MIDI input port for the CMD DC-1 controller. If on Windows, also select your **LoopBe1** port as an output.
+2. Select the amount of steps each rotary event should output (defaults to 1).
+3. Select the MIDI input port for the CMD DC-1 controller. If on Windows, also select your **LoopBe1** port as an output.
 
 ## Contributing
 

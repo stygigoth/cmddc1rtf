@@ -24,6 +24,8 @@ fn run() -> Result<(), Box<dyn Error>> {
     let mut midi_in = MidiInput::new("midir forwarding input")?;
     midi_in.ignore(Ignore::None);
 
+    let steps = get_steps()?;
+    println!();
     let in_port = select_port(&midi_in, "input")?;
     println!();
     let mut conn_out = get_out()?;
@@ -36,18 +38,23 @@ fn run() -> Result<(), Box<dyn Error>> {
         "midir-forward",
         move |_, message, _| {
             let mut new = message[2] as isize;
-            if rotaries.contains_key(&message[1]) && (message[2] != 0) && (message[2] != 127) {
-                new = *rotaries.get(&message[1]).unwrap() as isize
-                    + match message[2] {
-                        63 => -1,
-                        65 => 1,
-                        _ => 0,
-                    };
+            let mut control = message[1];
+            if rotaries.contains_key(&control) {
+                let old = *rotaries.get(&control).unwrap() as isize;
+                new = match message[2] {
+                    63 => old + (-1 * steps as isize),
+                    65 => old + (steps as isize),
+                    x => x as isize,
+                };
                 new = max(0, min(127, new));
-                rotaries.insert(message[1], new as u8);
+                if message[2] == 63 || message[2] == 65 {
+                    rotaries.insert(control, new as u8);
+                } else {
+                    control += 40;
+                }
             }
             conn_out
-                .send(&[message[0], message[1], new as u8])
+                .send(&[message[0], control, new as u8])
                 .unwrap_or_else(|_| println!("Error when forwarding message..."));
         },
         (),
@@ -63,6 +70,14 @@ fn run() -> Result<(), Box<dyn Error>> {
 
     println!("Closing connections");
     Ok(())
+}
+
+fn get_steps() -> Result<u8, Box<dyn Error>> {
+    print!("Please select a speed for rotaries (default of 1): ");
+    stdout().flush()?;
+    let mut input = String::new();
+    stdin().read_line(&mut input)?;
+    Ok(input.trim().parse::<u8>().unwrap_or(1))
 }
 
 fn select_port<T: MidiIO>(midi_io: &T, descr: &str) -> Result<T::Port, Box<dyn Error>> {
